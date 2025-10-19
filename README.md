@@ -61,7 +61,6 @@ where:
 - **Secret Storage**: Encrypted using KSafe with platform-specific secure storage
 - **Time Handling**: Uses `kotlinx-datetime` for consistent time calculations across platforms
 - **HMAC Implementation**: Platform-agnostic using `cryptography-kotlin` library
-- **Real-time Updates**: 100ms refresh cycles for smooth countdown and immediate code updates
 
 #### QR Code Format
 Standard OTP Auth URI format:
@@ -190,16 +189,11 @@ The project uses manual framework integration (CocoaPods has been removed for be
 - **Material 3 Design**: Modern UI components with proper theming
 - **Thread-Safe Navigation**: Proper coroutine context handling across platforms
 
-### 💾 Data Persistence
+### 💾 Data Persistence & DI
 - **Room Multiplatform**: Shared database schema with platform-specific builders
 - **Expect/Actual Pattern**: Clean separation of platform implementations
-- **Reactive Data Flow**: Kotlin Flow integration with Compose State
 - **Koin DI**: Comprehensive dependency injection across all layers
 
-### ⚡ Performance & Compatibility
-- **Native Framework Integration**: Manual linking for better iOS compatibility
-- **Compose Multiplatform 1.6.11**: Latest stable version with animation support
-- **kotlin.native.cacheKind=none**: Optimized for Compose Multiplatform linker
 
 
 ## Development Commands
