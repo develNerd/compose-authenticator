@@ -25,16 +25,7 @@ object KeyGenerator {
     }
 }
 
-// Time service for TOTP generation
-interface TimeService {
-    fun getCurrentTime(): Long
-    fun getTimeStep(): Long
-}
 
-// QR Code scanning service
-interface QRCodeScannerService {
-    suspend fun scanQRCode(): QRCodeResult
-}
 
 sealed class QRCodeResult {
     data class Success(val qrCode: String) : QRCodeResult()

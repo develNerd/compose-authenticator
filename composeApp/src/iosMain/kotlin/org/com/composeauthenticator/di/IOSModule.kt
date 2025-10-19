@@ -19,17 +19,9 @@ val iosModule = module {
         KSafeKeyService(get())
     }
 
-
-
-    single<TimeService> { 
-        IOSTimeService() 
-    }
     
     single<CameraPermissionService> { 
         IOSCameraPermissionService() 
     }
-    
-    single<QRCodeScannerService> { 
-        IOSQRCodeScannerService() 
-    }
+
 }

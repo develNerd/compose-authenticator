@@ -91,44 +91,8 @@ class TOTPGenerator {
         fun getRemainingTime(currentTime: Long = Clock.System.now().toEpochMilliseconds() / 1000): Long {
             return TIME_STEP - (currentTime % TIME_STEP)
         }
-        
-        /**
-         * Get the current time step for TOTP calculation
-         * @param currentTime Current Unix timestamp in seconds (default: current system time)
-         * @return Current time step value
-         */
-        @OptIn(ExperimentalTime::class)
-        fun getCurrentTimeStep(currentTime: Long = Clock.System.now().toEpochMilliseconds() / 1000): Long {
-            return (currentTime - EPOCH_START) / TIME_STEP
-        }
-        
-        /**
-         * Validate a TOTP code against the given secret
-         * @param secret Base32 encoded secret key
-         * @param code The TOTP code to validate
-         * @param currentTime Current Unix timestamp in seconds (default: current system time)
-         * @param tolerance Number of time steps to check before/after current (default: 1)
-         * @return true if code is valid, false otherwise
-         */
-        @OptIn(ExperimentalTime::class)
-        suspend fun validateTOTP(
-            secret: String, 
-            code: String, 
-            currentTime: Long = Clock.System.now().toEpochMilliseconds() / 1000,
-            tolerance: Int = 1
-        ): Boolean {
-            val currentTimeStep = getCurrentTimeStep(currentTime)
-            
-            // Check current time step and tolerance window
-            for (i in -tolerance..tolerance) {
-                val testCode = generateHOTP(secret, currentTimeStep + i)
-                if (testCode == code) {
-                    return true
-                }
-            }
-            return false
-        }
-        
+
+
         /**
          * Decode Base32 string to byte array
          * @param encoded Base32 encoded string

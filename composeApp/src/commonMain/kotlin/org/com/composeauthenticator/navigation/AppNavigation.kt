@@ -3,10 +3,7 @@ package org.com.composeauthenticator.navigation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,9 +15,11 @@ import org.com.composeauthenticator.presentation.ui.screen.AddAccountScreen
 import org.com.composeauthenticator.presentation.ui.screen.QRScannerScreen
 import org.com.composeauthenticator.presentation.viewmodel.MainViewModel
 import org.com.composeauthenticator.presentation.viewmodel.AddAccountViewModel
-import org.com.composeauthenticator.data.repository.UserAccountRepository
-import org.com.composeauthenticator.platform.*
+import org.com.composeauthenticator.platform.KeyService
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
+import androidx.compose.runtime.rememberCoroutineScope
 
 sealed class Screen(val route: String) {
     object Main : Screen("main")
@@ -32,11 +31,9 @@ sealed class Screen(val route: String) {
 fun AppNavigation(
     navController: NavHostController = rememberNavController()
 ) {
-    // Inject dependencies using Koin
-    val repository: UserAccountRepository = koinInject()
-    val qrCodeScannerService: QRCodeScannerService = koinInject()
-    val cameraPermissionService: CameraPermissionService = koinInject()
+    // Only inject services that are directly used in this composable
     val keyService: KeyService = koinInject()
+    val scope = rememberCoroutineScope()
 
     NavHost(
         navController = navController,
@@ -46,11 +43,7 @@ fun AppNavigation(
         composable(
             route = Screen.Main.route
         ) {
-            val mainViewModel = remember {
-                MainViewModel(
-                    repository = repository
-                )
-            }
+            val mainViewModel: MainViewModel = koinViewModel()
 
             MainScreen(
                 viewModel = mainViewModel,
@@ -64,16 +57,7 @@ fun AppNavigation(
         composable(
             route = Screen.AddAccount.route
         ) { backStackEntry ->
-            val addAccountViewModel = remember {
-                AddAccountViewModel(
-                    repository = repository,
-                    qrCodeScannerService = qrCodeScannerService,
-                    cameraPermissionService = cameraPermissionService,
-                    keyService = keyService
-                )
-            }
-
-
+            val addAccountViewModel: AddAccountViewModel = koinViewModel()
 
             // Handle QR scan result
             val qrResult = backStackEntry.savedStateHandle.get<String>("qr_result")
@@ -104,10 +88,12 @@ fun AppNavigation(
             QRScannerScreen(
                 onQRCodeScanned = { qrCode ->
                     // Navigate back with result
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("qr_result", qrCode)
-                    navController.popBackStack()
+                    scope.launch(Dispatchers.Main.immediate) {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("qr_result", qrCode)
+                   //     navController.popBackStack()
+                    }
                 },
                 onNavigateBack = {
                     navController.popBackStack()

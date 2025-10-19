@@ -15,13 +15,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.com.composeauthenticator.data.model.UserAccount
-import org.com.composeauthenticator.utils.TOTPGenerator
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
+import org.com.composeauthenticator.presentation.viewmodel.TOTPViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountCard(
     account: UserAccount,
@@ -30,48 +29,14 @@ fun AccountCard(
     onDelete: () -> Unit
 ) {
     val clipboardManager = LocalClipboardManager.current
+    val totpViewModel: TOTPViewModel = koinViewModel()
+    val totpState by totpViewModel.totpState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
     
-        // Real-time TOTP and remaining time states
-    var totp by remember { mutableStateOf("------") }
-    var remainingTime by remember { mutableLongStateOf(30L) }
-    
-    // Continuous progress animation
-    var currentTimeMillis by remember { mutableLongStateOf(Clock.System.now().toEpochMilliseconds()) }
-    
-    // Real-time updates
-    LaunchedEffect(Unit) {
-        while (true) {
-            val now = Clock.System.now().toEpochMilliseconds()
-            currentTimeMillis = now
-            
-            val currentTimeSeconds = now / 1000
-            val newRemainingTime = TOTPGenerator.getRemainingTime(currentTimeSeconds)
-            
-            try {
-                val newTotp = TOTPGenerator.generateTOTP(decryptedSecret, currentTimeSeconds)
-                // Only update TOTP if it actually changed to avoid unnecessary recomposition
-                if (totp != newTotp) {
-                    totp = newTotp
-                }
-            } catch (e: Exception) {
-                totp = "ERROR"
-            }
-            
-            remainingTime = newRemainingTime
-            delay(100) // Update every 100ms for smooth animation
-        }
+    // Start TOTP updates when component is first composed
+    LaunchedEffect(decryptedSecret) {
+        totpViewModel.startTOTPUpdates(decryptedSecret)
     }
-    
-    // Smooth progress calculation using milliseconds for continuous animation
-    val progressMultiplyingFactor = remember(currentTimeMillis) {
-        derivedStateOf {
-            val currentSeconds = currentTimeMillis / 1000.0
-            val remainder = currentSeconds % 30.0
-            val progress = (30.0 - remainder) / 30.0
-            progress.toFloat().coerceIn(0f, 1f)
-        }
-    }.value
     
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -107,7 +72,7 @@ fun AccountCard(
                 Row {
                     IconButton(
                         onClick = {
-                            clipboardManager.setText(AnnotatedString(totp))
+                            clipboardManager.setText(AnnotatedString(totpState.totpCode))
                         }
                     ) {
                         Icon(
@@ -137,12 +102,12 @@ fun AccountCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = totp,
+                    text = totpState.totpCode,
                     style = MaterialTheme.typography.headlineMedium,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (totpState.isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     letterSpacing = 2.sp
                 )
                 
@@ -151,8 +116,8 @@ fun AccountCard(
                     modifier = Modifier.size(70.dp)
                 ) {
                     CustomProgressBar(
-                        progressMultiplyingFactor = progressMultiplyingFactor,
-                        secondsRemaining = remainingTime.toString()
+                        progressMultiplyingFactor = totpState.progressMultiplyingFactor,
+                        secondsRemaining = totpState.remainingTime.toString()
                     )
                 }
             }

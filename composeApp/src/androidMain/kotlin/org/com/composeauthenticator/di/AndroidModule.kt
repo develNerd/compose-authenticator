@@ -21,15 +21,8 @@ val androidModule = module {
         KSafeKeyService(get())
     }
 
-    single<TimeService> { 
-        AndroidTimeService() 
-    }
-    
     single<CameraPermissionService> { 
         AndroidCameraPermissionService(get<Context>()) 
     }
-    
-    single<QRCodeScannerService> { 
-        AndroidQRCodeScannerService() 
-    }
+
 }

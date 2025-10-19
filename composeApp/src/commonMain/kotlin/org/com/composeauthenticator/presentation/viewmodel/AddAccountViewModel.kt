@@ -9,8 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.com.composeauthenticator.data.repository.UserAccountRepository
 import org.com.composeauthenticator.data.model.UserAccount
-import org.com.composeauthenticator.platform.QRCodeScannerService
-import org.com.composeauthenticator.platform.QRCodeResult
 import org.com.composeauthenticator.platform.CameraPermissionService
 import org.com.composeauthenticator.platform.KeyService
 import org.com.composeauthenticator.utils.QRCodeParser
@@ -29,7 +27,6 @@ data class AddAccountUiState(
 
 class AddAccountViewModel(
     private val repository: UserAccountRepository,
-    private val qrCodeScannerService: QRCodeScannerService,
     private val cameraPermissionService: CameraPermissionService,
     private val keyService: KeyService
 ) : ViewModel() {
@@ -55,31 +52,7 @@ class AddAccountViewModel(
         }
     }
     
-    fun startQRScanning() {
-        viewModelScope.launch {
-            if (!_uiState.value.hasPermission) {
-                requestCameraPermission()
-                return@launch
-            }
-            
-            _uiState.value = _uiState.value.copy(isScanning = true, error = null)
-            
-            when (val result = qrCodeScannerService.scanQRCode()) {
-                is QRCodeResult.Success -> {
-                    handleQRCodeResult(result.qrCode)
-                }
-                is QRCodeResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        error = result.message,
-                        isScanning = false
-                    )
-                }
-                is QRCodeResult.Cancelled -> {
-                    _uiState.value = _uiState.value.copy(isScanning = false)
-                }
-            }
-        }
-    }
+
     
     fun handleQRCodeResult(qrCode: String) {
         val otpAuthUri = QRCodeParser.parseOTPAuthUri(qrCode)
