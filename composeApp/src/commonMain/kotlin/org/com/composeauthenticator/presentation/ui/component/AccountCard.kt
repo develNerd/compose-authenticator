@@ -9,8 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,7 +17,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.com.composeauthenticator.data.model.UserAccount
 import org.com.composeauthenticator.presentation.viewmodel.TOTPViewModel
+import org.com.composeauthenticator.platform.ClipboardService
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,10 +29,11 @@ fun AccountCard(
     modifier: Modifier = Modifier,
     onDelete: () -> Unit
 ) {
-    val clipboardManager = LocalClipboardManager.current
+    val clipboardService: ClipboardService = koinInject()
     val totpViewModel: TOTPViewModel = koinViewModel()
     val totpState by totpViewModel.totpState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showCopyFeedback by remember { mutableStateOf(false) }
     
     // Start TOTP updates when component is first composed
     LaunchedEffect(decryptedSecret) {
@@ -72,12 +74,14 @@ fun AccountCard(
                 Row {
                     IconButton(
                         onClick = {
-                            clipboardManager.setText(AnnotatedString(totpState.totpCode))
+                            clipboardService.copyToClipboard(totpState.totpCode)
+                            showCopyFeedback = true
                         }
                     ) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
-                            contentDescription = "Copy Code"
+                            contentDescription = "Copy Code",
+                            tint = if (showCopyFeedback) MaterialTheme.colorScheme.primary else LocalContentColor.current
                         )
                     }
                     
@@ -150,5 +154,13 @@ fun AccountCard(
                 }
             }
         )
+    }
+    
+    // Copy feedback effect
+    LaunchedEffect(showCopyFeedback) {
+        if (showCopyFeedback) {
+            kotlinx.coroutines.delay(2000) // Show feedback for 2 seconds
+            showCopyFeedback = false
+        }
     }
 }

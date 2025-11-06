@@ -24,5 +24,8 @@ val androidModule = module {
     single<CameraPermissionService> { 
         AndroidCameraPermissionService(get<Context>()) 
     }
-
+    
+    single<ClipboardService> {
+        AndroidClipboardService(get<Context>())
+    }
 }

@@ -23,5 +23,8 @@ val iosModule = module {
     single<CameraPermissionService> { 
         IOSCameraPermissionService() 
     }
-
+    
+    single<ClipboardService> {
+        IOSClipboardService()
+    }
 }

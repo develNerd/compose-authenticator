@@ -38,3 +38,9 @@ interface CameraPermissionService {
     suspend fun requestPermission(): Boolean
     suspend fun hasPermission(): Boolean
 }
+
+// Clipboard service for copying text to system clipboard
+interface ClipboardService {
+    fun copyToClipboard(text: String)
+    fun showCopyFeedback(): String // Returns feedback message like "Copied!" 
+}

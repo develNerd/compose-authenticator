@@ -35,6 +35,7 @@ fun AppNavigation(
     val keyService: KeyService = koinInject()
     val scope = rememberCoroutineScope()
 
+
     NavHost(
         navController = navController,
         modifier = Modifier.fillMaxSize(),
@@ -87,13 +88,10 @@ fun AppNavigation(
 
             QRScannerScreen(
                 onQRCodeScanned = { qrCode ->
-                    // Navigate back with result
-                    scope.launch(Dispatchers.Main.immediate) {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set("qr_result", qrCode)
-                   //     navController.popBackStack()
-                    }
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("qr_result", qrCode)
+                    navController.popBackStack()
                 },
                 onNavigateBack = {
                     navController.popBackStack()
